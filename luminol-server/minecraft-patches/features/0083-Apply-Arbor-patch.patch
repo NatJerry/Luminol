@@ -1,0 +1,45 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: NatJerry <xiaomajunqwq123@outlook.com>
+Date: Wed, 15 Jul 2026 10:29:49 +0800
+Subject: [PATCH] Apply Arbor patch
+
+
+diff --git a/io/papermc/paper/threadedregions/TeleportUtils.java b/io/papermc/paper/threadedregions/TeleportUtils.java
+index 2a64a5b2cf049661fe3f5a22ddfa39979624f5ec..8f7c514693e0fe360b0a5a1ca93c1a9f161c8826 100644
+--- a/io/papermc/paper/threadedregions/TeleportUtils.java
++++ b/io/papermc/paper/threadedregions/TeleportUtils.java
+@@ -41,7 +41,7 @@ public final class TeleportUtils {
+                             return;
+                         }
+                         (useFromRootVehicle ? realFrom.getRootVehicle() : realFrom).teleportAsync(
+-                            ((CraftWorld)loc.getWorld()).getHandle(), pos, null, null, null,
++                            ((CraftWorld)loc.getWorld()).getHandle(), pos, yaw, pitch, null,
+                             cause, teleportFlags, onComplete
+                         );
+                     },
+diff --git a/net/minecraft/network/PacketProcessor.java b/net/minecraft/network/PacketProcessor.java
+index 10fa576838c726d026df078eef6c693d14c2cbda..276baa92e5b67a8f0b41e854654c7b03a9842629 100644
+--- a/net/minecraft/network/PacketProcessor.java
++++ b/net/minecraft/network/PacketProcessor.java
+@@ -11,7 +11,7 @@ import org.slf4j.Logger;
+ 
+ public class PacketProcessor implements AutoCloseable {
+     private static final Logger LOGGER = LogUtils.getLogger();
+-    private final Queue<PacketProcessor.ListenerAndPacket<?>> packetsToBeHandled = Queues.newConcurrentLinkedQueue();
++    private final Queue<PacketProcessor.ListenerAndPacket<?>> packetsToBeHandled = new ca.spottedleaf.concurrentutil.collection.MultiThreadedQueue<>();
+     private final Thread runningThread;
+     private boolean closed;
+ 
+diff --git a/net/minecraft/world/entity/projectile/throwableitemprojectile/ThrownEnderpearl.java b/net/minecraft/world/entity/projectile/throwableitemprojectile/ThrownEnderpearl.java
+index ad35eafa457f706879ba8a9c92b3a34e620ee2d6..065bd1a948e837da4158973395b61ca1014d59e0 100644
+--- a/net/minecraft/world/entity/projectile/throwableitemprojectile/ThrownEnderpearl.java
++++ b/net/minecraft/world/entity/projectile/throwableitemprojectile/ThrownEnderpearl.java
+@@ -99,7 +99,7 @@ public class ThrownEnderpearl extends ThrowableItemProjectile {
+                 }
+ 
+                 entity.teleportAsync(
+-                    checkWorld, to, null, null, null,
++                    checkWorld, to, null, null, entity.getDeltaMovement(),
+                     org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.ENDER_PEARL,
+                     // chunk could have been unloaded
+                     Entity.TELEPORT_FLAG_TELEPORT_PASSENGERS | Entity.TELEPORT_FLAG_LOAD_CHUNK,
